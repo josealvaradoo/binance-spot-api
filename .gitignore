@@ -1,0 +1,12 @@
+# dependencies
+/node_modules
+
+# enviroment
+.env
+
+# ide
+/.vscode
+
+# lock files
+*.lock
+*-lock.json
