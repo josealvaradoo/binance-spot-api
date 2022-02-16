@@ -2,8 +2,16 @@ const binance = require('../config')
 
 class OwnController {
 	static async index(req, res) {
+		let pars = req?.query?.exclude || ''
 		let total = 0
 		let cryptocurrencies = []
+
+		if (pars) {
+			pars = pars?.toUpperCase()?.split(',')
+		} else {
+			pars = []
+		}
+
 		try {
 			await binance.useServerTime()
 			const prices = await binance.prices()
@@ -34,12 +42,25 @@ class OwnController {
 				)
 
 				cryptocurrencies = cryptocurrencies?.reduce(
-					(acc, coin) => ({ ...acc, [coin?.label]: coin?.value }),
+					(acc, coin) => ({
+						...acc, [coin?.label]: {
+							amount: coin?.amount,
+							value: coin?.value,
+							price: coin?.label === 'USDT' ? 1 : Number(Number(prices?.[`${coin?.label}USDT`]).toFixed(2))
+						}
+					}),
 					{}
+				)
+
+				const getAvailable = () => (
+					pars.reduce((acc, par) => (
+						acc -= cryptocurrencies?.[par]?.value
+					), total)
 				)
 
 				res.status(200).json({
 					data: {
+						available: Number(Number(getAvailable()).toFixed(2)),
 						coins: cryptocurrencies,
 						total: Number(Number(total).toFixed(2)),
 					},
